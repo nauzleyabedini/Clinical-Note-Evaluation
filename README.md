@@ -89,7 +89,7 @@ The evaluation of these AI-generated notes is modular, grouping evaluation crite
 *   **Pandas:** Data manipulation and analysis.
 *   **OpenAI API:** For AI model evaluation (`gpt-4o-mini`).
 *   **Anthropic API:** For AI model evaluation (`claude-sonnet-5`).
-*   **Google Gemini API:** For generating "gold-standard" clinical notes (`gemini-3.6-flash`).
+*   **Google Gemini API:** For generating AI clinical notes (`gemini-3.6-flash`).
 *   **Matplotlib & Seaborn:** (Implicit for future visualization of evaluation results).
 *   **Google Colaboratory:** Development environment, utilizing cloud resources.
 
