@@ -82,15 +82,15 @@ The evaluation of these AI-generated notes is modular, grouping evaluation crite
 ## Results
 
 ### Average Evaluation Scores by LLM Judge
-![Average Evaluation Scores](llm_judge_comparison_bar.png)
+<img width="4200" height="2400" alt="llm_judge_comparison_bar" src="https://github.com/user-attachments/assets/d53b0b5f-ebcf-406d-b407-d17731f1da35" />
 *Figure 1: Average evaluation scores across 7 clinical metrics comparing Anthropic (claude-sonnet-5) and OpenAI (gpt-4o-mini) across 67 clinical encounters.*
 
 ### Score Comparison Across Samples by Metric (Heatmap)
-![Score Comparison Heatmap](llm_judge_heatmap.png)
+<img width="5400" height="1500" alt="llm_judge_heatmap" src="https://github.com/user-attachments/assets/19bfe733-0419-452b-a5b6-0d7d408be8eb" />
 *Figure 2: Heatmap showing the distribution of scores for Transcript Fidelity, Safety Risk Tier, and Note Structure Organization across all 67 samples.*
 
 ### Distribution of Compliance & Billing Scores
-![Compliance and Billing Scores](llm_judge_billing_boxplot.png)
+<img width="3600" height="1800" alt="llm_judge_billing_boxplot" src="https://github.com/user-attachments/assets/3720ca51-b07f-45bf-9829-2170e956d7b5" />
 *Figure 3: Boxplot showing the distribution of scores for HCC Compliance Ratio, ICD-10 Specificity, and Clinical Validation across all 67 samples.*
 
 ### Interpretation of LLM-as-a-Judge Results (Clinical Context - Full N=67 Dataset)
@@ -133,7 +133,7 @@ To further validate and refine this LLM-as-a-Judge evaluation harness, the follo
 **4. Introduce a Severity-Weighted F1 Score:**
 *   Compare current fidelity (hallucination/omission) scales against other measures of precision and recall, such as those used in the [NOHARM2](https://arxiv.org/abs/2512.01241) study by Wu, *et al.* published in *Nature Science* (2026) to calculate a severity-weighted F1 score. Examples include the RAND-UCLA Appropriateness Method (severity-weighted precision or hallucinations) and WHO Harm Severity Definitions (Severity-weighted recall or omission).
 
-### Conclusion ###
+### Conclusion 
 
 This project demonstrates a rigorous, quantitative, and clinically informed approach to evaluating AI models in sensitive domains like clinical documentation. It highlights capabilities in advanced natural language processing (NLP), multi-LLM orchestration, prompt engineering for clinical integrity, data-driven evaluation methodologies, and a deep understanding of domain-specific challenges in healthcare AI. These skills are directly transferable and critical for roles at the forefront of clinical AI research and development.
 
