@@ -12,6 +12,15 @@ The harness is designed to meticulously audit AI-generated clinical documentatio
 *   **Quantitative Performance Metrics with Clinical Domain Expertise:** Defining and applying measurable metrics for clinical accuracy, compliance (HCC capture, ICD-10 specificity), and safety, informed by deep clinical understanding.
 *   **Healthcare AI Application:** Addressing a critical need in clinical AI development for rigorous validation and continuous improvement of documentation systems, directly contributing to safe and effective AI deployment in healthcare.
 
+## Key Features & Technical Highlights
+
+*   **Domain-Specific Data Handling:** Utilizes the [ACI-BENCH dataset](https://arxiv.org/abs/2306.02022), demonstrating experience with specialized healthcare datasets and understanding of clinical data nuances.
+*   **Flexible LLM Integration with Nuance Handling:** Designed to easily incorporate and compare performance across various generative AI models, including explicit handling of Anthropic's `TextBlock` responses and setting `temperature=0.0` for deterministic JSON output.
+*   **Strict Structured Output Parsing:** Ensures reliable extraction of complex evaluation metrics from LLM responses via explicit JSON schema enforcement and robust post-processing.
+*   **Advanced Error Tolerance & Recovery:** Implements robust error handling, including API-specific retry mechanisms with exponential backoff, and strategies to mitigate `JSONDecodeError` by optimizing `max_tokens` and `temperature` for consistent LLM output.
+*   **Iterative Fine-Tuning of Evaluation Logic:** The modular design facilitates **iterative refinement and optimization** of individual evaluation criteria and prompts, allowing for continuous improvement of the harness's precision and recall in identifying documentation issues.
+*   **Quantitative Analysis for Actionable Clinical Impact:** Focuses on generating measurable data points to inform AI model improvements and assess clinical impact, providing actionable insights for clinical AI development by directly linking technical metrics to **clinical outcomes and compliance standards**.
+
 ## Methodology
 
 ### AI Note Generation
@@ -68,16 +77,6 @@ The evaluation of these AI-generated notes is modular, grouping evaluation crite
     *   **`overall_key_findings`:** A string summary of overall errors or strengths across all modules.
 
 **Output:** Strictly structured JSON containing quantifiable scores for each domain and `overall_key_findings`, rigorously enforced through prompt engineering and `response_format` settings.
-
-
-## Key Features & Technical Highlights
-
-*   **Domain-Specific Data Handling:** Utilizes the [ACI-BENCH dataset](https://arxiv.org/abs/2306.02022), demonstrating experience with specialized healthcare datasets and understanding of clinical data nuances.
-*   **Flexible LLM Integration with Nuance Handling:** Designed to easily incorporate and compare performance across various generative AI models, including explicit handling of Anthropic's `TextBlock` responses and setting `temperature=0.0` for deterministic JSON output.
-*   **Strict Structured Output Parsing:** Ensures reliable extraction of complex evaluation metrics from LLM responses via explicit JSON schema enforcement and robust post-processing.
-*   **Advanced Error Tolerance & Recovery:** Implements robust error handling, including API-specific retry mechanisms with exponential backoff, and strategies to mitigate `JSONDecodeError` by optimizing `max_tokens` and `temperature` for consistent LLM output.
-*   **Iterative Fine-Tuning of Evaluation Logic:** The modular design facilitates **iterative refinement and optimization** of individual evaluation criteria and prompts, allowing for continuous improvement of the harness's precision and recall in identifying documentation issues.
-*   **Quantitative Analysis for Actionable Clinical Impact:** Focuses on generating measurable data points to inform AI model improvements and assess clinical impact, providing actionable insights for clinical AI development by directly linking technical metrics to **clinical outcomes and compliance standards**.
 
 ## Results
 
