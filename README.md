@@ -133,9 +133,10 @@ To further validate and refine this LLM-as-a-Judge evaluation harness, the follo
 **4. Introduce a Severity-Weighted F1 Score:**
 *   Compare current fidelity (hallucination/omission) scales against other measures of precision and recall, such as those used in the [NOHARM2](https://arxiv.org/abs/2512.01241) study by Wu, *et al.* published in *Nature Science* (2026) to calculate a severity-weighted F1 score. Examples include the RAND-UCLA Appropriateness Method (severity-weighted precision or hallucinations) and WHO Harm Severity Definitions (Severity-weighted recall or omission).
 
-### Conclusion
+### Conclusion ###
 
 This project demonstrates a rigorous, quantitative, and clinically informed approach to evaluating AI models in sensitive domains like clinical documentation. It highlights capabilities in advanced natural language processing (NLP), multi-LLM orchestration, prompt engineering for clinical integrity, data-driven evaluation methodologies, and a deep understanding of domain-specific challenges in healthcare AI. These skills are directly transferable and critical for roles at the forefront of clinical AI research and development.
+
 ---
 
 ## Resources
