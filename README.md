@@ -117,17 +117,18 @@ While Anthropic exhibits a scoring pattern that *suggests* a more critical appro
 
 To further validate and refine this LLM-as-a-Judge evaluation harness, the following next steps are proposed:
 
-**1. Prompt Engineering for Inter-Rater Reliability (IRR):**
+**1. Improve Model Run-Time**
+*   **Asynchronous Processing:** Introduce asynchronous I/O (performing multiple API calls at once rather than in sequence) to decrease runtimes in note generation and evaluation.
+
+**2. Refine Evaluation Frameworks:** 
+*   **Introduce 2-stage omission evaluation to reduce ambiguity in ratings:** Rather than evaluating omissions and clinical severity in a single step, break this process down into two steps to remove ambiguity. Force the model to first extract any omissions related to clinical information present in the transcript. Next, have the model assess the clinical severity of each missing fact independently.
+*   **Benchmarking:** Generate a sample database with notes with known fabrications and omissions of varying complexity and severity. Test model performance against these known parameters. 
 *   **Iterative Refinement via Loop Engineering:** Conduct "loop engineering" on the prompts for highly subjective metrics like *Transcript Fidelity* and *Safety Risk Tier*. By analyzing the discrepancies between Anthropic and OpenAI, we can introduce more explicit edge-case examples into the prompt rubrics to tighten agreement.
 *   **Chain-of-Thought (CoT) Verification:** Require the LLM judges to output a short rationale *before* providing their final numeric score. This forces the model to ground its decision and often increases inter-model consensus.
 
-**2. Clinician Concordance Study (Human-in-the-Loop):**
+**3. Clinician Concordance Study (Human-in-the-Loop):**
 *   **Expert Baselines:** Validate the LLM-as-a-Judge outputs against a panel of human clinical documentation experts (e.g., CDI specialists, attending physicians).
 *   **Benchmarking AI vs. Human:** Compare the AI judges' scores to the human experts to determine which LLM's scoring profile (OpenAI's generalized approach vs. Anthropic's conservative approach) more accurately reflects true clinical judgment.
-
-**3. Statistical Agreement Analysis:**
-*   **Cohen's Kappa:** Formalize the inter-rater reliability between the LLM judges by calculating Cohen's Kappa (or Fleiss' Kappa for >2 judges) and against human judges for categorical metrics. This provides a rigorous quantitative measure of consensus beyond simple score averaging, helping to prove the statistical validity of the automated audit.
-*   **Handling Zero-Variance Edge Cases:** Address statistical artifacts (like Cohen's Kappa returning 0.0 or NaN) that occur when an AI judge exhibits zero variance (e.g., universally scoring a '4') across a highly uniform sample set.
 
 **4. Introduce a Severity-Weighted F1 Score:**
 *   Compare current fidelity (hallucination/omission) scales against other measures of precision and recall, such as those used in the [NOHARM2](https://arxiv.org/abs/2512.01241) study by Wu, *et al.* published in *Nature Science* (2026) to calculate a severity-weighted F1 score. Examples include the RAND-UCLA Appropriateness Method (severity-weighted precision or hallucinations) and WHO Harm Severity Definitions (Severity-weighted recall or omission).
