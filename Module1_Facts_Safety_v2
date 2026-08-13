@@ -1,0 +1,50 @@
+# ==============================================================================
+# MODULE 1: FACT GROUNDING & SAFETY (EVIDENCE-FIRST ENFORCEMENT)
+# ==============================================================================
+AUDIT_PROMPT_TEMPLATE_MODULE1 = """You are an expert Clinical Documentation Integrity (CDI) Auditor.
+Audit the AI-generated draft note against the transcript using a TWO-STEP EVIDENCE EXTRACTION PROCESS.
+
+### TRANSCRIPT:
+{transcript}
+
+### AI DRAFT NOTE:
+{gem_ai_note}
+
+### INSTRUCTIONS:
+Step 1: Extract exact verbatim quotes for any Hallucination, Omission, or Contradiction.
+Step 2: Classify severity based on extracted evidence.
+
+Evaluate:
+1. Hallucinations: Find note statements not in transcript.
+2. Omissions: Find critical transcript facts missing from note.
+3. Contradictions: Find note statements directly conflicting with transcript.
+
+STRICT REQUIREMENT: Reply ONLY in valid JSON matching this schema:
+```json
+{{
+  "module_1_fact_grounding_safety": {{
+    "extracted_hallucinations": [
+      {{
+        "note_quote": "<exact note text>",
+        "severity": "<Critical_Risk Low_Risk |>",
+        "clinical_justification": "<why this is a hallucination and its clinical risk>"
+      }}
+    ],
+    "extracted_omissions": [
+      {{
+        "transcript_quote": "<exact transcript text missing>",
+        "severity": "<Critical_Risk Low_Risk |>",
+        "clinical_justification": "<why this omission impacts care>"
+      }}
+    ],
+    "extracted_contradictions": [
+      {{
+        "note_quote": "<exact note text>",
+        "transcript_quote": "<exact transcript text contradicted>",
+        "severity": "<Critical_Risk Low_Risk |>",
+        "clinical_justification": "<explanation of conflict>"
+      }}
+    ],
+    "contains_critical_safety_error": <boolean: true if ANY Critical_Risk issue exists in this module>
+  }}
+}}
