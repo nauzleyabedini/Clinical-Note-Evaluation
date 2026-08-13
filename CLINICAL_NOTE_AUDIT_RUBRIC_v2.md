@@ -1,5 +1,5 @@
 # Clinical Note Evaluation & Audit Guidelines
-**Version:** 3.0 (Production / Industry Standard)  
+**Version:** 2.0 (Production / Industry Standard)  
 **Target:** Outpatient Ambient AI Progress Notes  
 
 ---
