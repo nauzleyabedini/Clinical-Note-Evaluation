@@ -1,0 +1,25 @@
+#---------------------------------------------------------------------------
+#PHASE 2: POST-VETTING EVAL (Pre-Signed AI Note vs. Final Revised/Signed)
+#WIP
+#---------------------------------------------------------------------------
+
+def compute_post_vetting_edits(gem_ai_note, gold_note):
+    """
+    Measures how much the synthetic attending physician (Dr. Gemini) had to edit
+    the raw AI draft note before signing it.
+    """
+    raw_distance = Levenshtein.distance(gem_ai_note, gold_note)
+    max_len = max(len(gem_ai_note), len(gold_note))
+    normalized_edit_dist = raw_distance / max_len if max_len > 0 else 0.0
+
+    draft_words = gem_ai_note.split()
+    signed_words = gold_note.split()
+    word_distance = Levenshtein.distance(draft_words, signed_words)
+    max_words = max(len(draft_words), len(signed_words))
+    word_edit_ratio = word_distance / max_words if max_words > 0 else 0.0
+
+    return {
+        "character_edit_distance": raw_distance,
+        "normalized_edit_distance": round(normalized_edit_dist, 4),
+        "word_edit_ratio": round(word_edit_ratio, 4)
+    }
