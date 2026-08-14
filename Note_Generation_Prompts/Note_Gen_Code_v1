@@ -1,0 +1,154 @@
+import google.generativeai as genai
+
+#-------------------------------------------------------
+# PHASE 1: GENERATE GEMINI AI DRAFT NOTES
+#-------------------------------------------------------
+
+def gem_ai_note(transcript):
+    """
+    Uses Gemini to generate an initial AI draft note grounded in the transcript.
+    This note is designed to be compliant, accurate, and safe according to outpatient note standards.
+    """
+    system_prompt = """You are an AI assistant specialized in clinical documentation generation and integrity.
+    Your task is to generate a comprehensive, accurate, compliant, and safe outpatient note grounded in the included patient-doctor transcript.
+    Ensure the note is compliant with clinical standards, avoids hallucinations and omissions, and strictly grounds all details in the transcript.
+
+### GENERATION REQUIREMENTS:
+CLINICAL INTEGRITY:
+1.  **Transcript Fidelity:** Include only information explicitly stated or clearly implied by the transcript. Strictly avoid adding external knowledge, fabrications, or interpretations not supported by the dialogue.
+2.  **Style and Structure:** Structure the note as an outpatient note, with each section as a new paragraph and the following headings: 'CHIEF COMPLAINT,' 'HISTORY OF PRESENT ILLNESS,' 'REVIEW OF SYSTEMS,' 'PHYSICAL EXAM,' 'RESULTS,' and 'ASSESSMENT AND PLAN.' ENSURE ALL THE FOLLOWING HEADINGS ARE PRESENT IN THE OUTPUT, EVEN IF THE SECTION REMAINS BLANK. Avoid repetition of information in different sections. Be comprehensive and concise. Do not include an official physician sign-off line as this is an initial draft.
+3.  **Completeness (as per transcript):** Capture all relevant clinical information discussed in the transcript.
+4.  **Outpatient Standard:** Generate a note suitable for an outpatient setting.
+COMPLIANCE:
+5.  **HCC:** For every chronic condition listed in the Assessment/Plan, document at least one MEAT action is documented:
+    Monitor (signs, symptoms, test results).
+    Evaluate (test results, medication response).
+    Assess (status, progress, stability).
+    Treat (medications, therapies, referrals).
+6.  **ICD-10 Codes:** Use correct ICD-10 codes based on information provided in the transcript.
+SAFETY:
+**Risk Assessment:** Cross-check and correct for any mistated facts or medical errors that could lead to patient safety events or patient harms. Flag any concerns for clinician review and mark the item.
+Return ONLY the AI-generated draft clinical note, formatted as follows:
+
+### EXAMPLE OUTPUT FORMAT:
+CHIEF COMPLAINT
+[Patient's chief complaint, e.g., 'Annual physical examination.']
+
+HISTORY OF PRESENT ILLNESS
+[Relevant history, e.g., 'Mrs. Smith is a 45-year-old female presenting for her annual physical...']
+
+REVIEW OF SYSTEMS
+[Review of systems findings, e.g., 'Constitutional: No fever or chills.']
+
+PHYSICAL EXAM
+[Physical exam findings, e.g., 'General: Well-appearing, no acute distress.' Include vital signs if available.]
+
+RESULTS
+[Relevant test results, e.g., 'Labs: CBC within normal limits.']
+
+ASSESSMENT AND PLAN
+[Assessment and plan, e.g., '1. Hypertension (I10): Continue Lisinopril. Monitor BP.']
+"""
+
+    user_prompt = f"""### ENCOUNTER TRANSCRIPT:
+{transcript}
+
+Please generate the initial AI draft clinical note now:"""
+
+    # Call Gemini API
+    response = gemini_model.generate_content(
+        contents=f"{system_prompt}\n\n{user_prompt}"
+    )
+    return response.text.strip()
+
+gem_ai_notes_generated = []
+
+print("\n--- Generating Gemini AI Draft Notes ---")
+for i in range(len(sample_df)):
+    transcript = sample_df['dialogue'].iloc[i]
+
+    print(f"Generating AI Draft Note for Sample {i+1}...")
+    generated_note = gem_ai_note(transcript)
+    gem_ai_notes_generated.append(generated_note)
+
+sample_df['gem_ai_notes_generated'] = gem_ai_notes_generated
+display(sample_df[['encounter_id', 'dialogue', 'note', 'gem_ai_notes_generated']].head())
+
+import re # Import regular expression module
+
+# POST-PROCESSING TO FORCE NOTE STRUCTURE - did this because sometimes the longer instructions in the system prompt led to a default to SOAP note format without the additional subheadings.
+
+def post_process_note_structure(note_text):
+    required_headings = [
+        "CHIEF COMPLAINT",
+        "HISTORY OF PRESENT ILLNESS",
+        "REVIEW OF SYSTEMS",
+        "PHYSICAL EXAM",
+        "RESULTS",
+        "ASSESSMENT AND PLAN"
+    ]
+
+    sections = {}
+    current_heading = None
+    for line in note_text.split('\n'):
+        line_stripped = line.strip()
+
+        found_heading = False
+        for heading in required_headings:
+            # Use regex to match the heading exactly, ignoring case and optional trailing colon/whitespace
+            if re.match(r'^\s*' + re.escape(heading) + r':?\s*$', line_stripped, re.IGNORECASE):
+                current_heading = heading
+                sections[current_heading] = [] # Initialize list for this new section
+                found_heading = True
+                break
+        # If not a heading and a current_heading has been set, append the line (even if empty)
+        if not found_heading and current_heading is not None:
+            sections[current_heading].append(line)
+
+    # Reconstruct the note, ensuring all headings are present and content is properly formatted
+    processed_note_lines = []
+    for heading in required_headings:
+        processed_note_lines.append(heading)
+        if heading in sections and sections[heading]:
+            # Filter out lines that are purely whitespace, but keep empty lines for formatting within content
+            content_lines = []
+            last_line_was_empty = True
+            for ln in sections[heading]:
+                if ln.strip(): # If line has content
+                    content_lines.append(ln.strip())
+                    last_line_was_empty = False
+                elif not last_line_was_empty: # If line is empty and previous wasn't, add one empty line
+                    content_lines.append('')
+                    last_line_was_empty = True
+
+            # Remove any trailing empty lines after processing
+            while content_lines and not content_lines[-1].strip():
+                content_lines.pop()
+
+            if content_lines:
+                processed_note_lines.extend(content_lines)
+            else:
+                processed_note_lines.append("[No information provided]")
+        else:
+            processed_note_lines.append("[No information provided]")
+        processed_note_lines.append('') # Add an empty line for separation between sections
+
+    return '\n'.join(processed_note_lines).strip()
+
+# Apply post-processing to the 'gem_ai_note_generated' column
+print("\n--- Applying Post-Processing to Generated Notes ---")
+sample_df['gem_ai_note_post_processed'] = sample_df['gem_ai_notes_generated'].apply(post_process_note_structure)
+
+# Display the original generated note and the post-processed version for comparison
+display(sample_df[['encounter_id', 'gem_ai_notes_generated', 'gem_ai_note_post_processed']].head())
+
+# Save full dataset with AI generated notes
+output_full_dataset_path = 'full_dataset_with_ai_notes.csv'
+sample_df.to_csv(output_full_dataset_path, index=False)
+print(f"Full dataset saved to {output_full_dataset_path}")
+
+# Save first 10 encounters in the full dataset with AI notes as an experimental dataset
+experimental_df = sample_df.head(10).copy()
+output_experimental_dataset_path = 'experimental_dataset_with_ai_notes.csv'
+experimental_df.to_csv(output_experimental_dataset_path, index=False)
+print(f"Experimental dataset (first 10 encounters) saved to {output_experimental_dataset_path}")
