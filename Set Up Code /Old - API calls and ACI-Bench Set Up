@@ -1,0 +1,125 @@
+#-----------------------------
+#       SET UP APIs
+#-----------------------------
+
+import os
+import json
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import time
+import random
+
+!pip install anthropic
+!pip install -U google-generativeai # Install or update the google-generativeai package
+from google.colab import userdata
+from anthropic import Anthropic
+import google.generativeai as genai # Reverted import for Gemini to original style
+from openai import OpenAI, RateLimitError, APIError # Import specific OpenAI error types
+from anthropic import APIStatusError, OverloadedError # Only import specific Anthropic error types needed
+from anthropic.types import TextBlock # Added TextBlock import for handling Anthropic responses
+from google.api_core.exceptions import GoogleAPIError # Import GoogleAPIError for Gemini
+
+# Map Colab secrets to system environment variables
+os.environ["ANTHROPIC_API_KEY"] = userdata.get('AnthropicClinDocEvalAPIKey')
+os.environ["OPENAI_API_KEY"] = userdata.get('OpenAIClinDocEvalAPIKey')
+os.environ["GEMINI_API_KEY"] = userdata.get('Gemini_Clin_Doc_Eval_APIKey')
+
+# Configure Gemini API key
+genai.configure(api_key=os.environ["GEMINI_API_KEY"]) # Keep global configure
+
+# Initialize the clients
+anthropic_client = Anthropic()
+openai_client = OpenAI()
+gemini_model = genai.GenerativeModel('gemini-3.6-flash') # Removed api_key from constructor, relying on global configure
+
+# Test Anthropic with retry logic
+max_retries_anthropic = 5
+base_delay_anthropic = 1 # seconds
+anthropic_response = None
+
+for i in range(max_retries_anthropic):
+    try:
+        anthropic_response = anthropic_client.messages.create(
+            model="claude-sonnet-5", # Corrected model name based on error suggestion
+            max_tokens=1000,
+            messages=[{"role": "user", "content": "Say hello!"}]
+        )
+        print("Anthropic says:", anthropic_response.content[0].text)
+        break # If successful, break the loop
+    except OverloadedError as e:
+        if i < max_retries_anthropic - 1:
+            delay = base_delay_anthropic * (2 ** i) + random.uniform(0, 1) # Exponential backoff with jitter
+            print(f"Anthropic API overloaded. Retrying in {delay:.2f} seconds...")
+            time.sleep(delay)
+        else:
+            print(f"Max retries reached. Still encountering OverloadedError: {e}")
+            # If you want to raise an error after max retries:
+            # raise # Re-raise the exception if max retries are exceeded
+            print("Skipping Anthropic API call due to persistent overload.")
+            break # Exit loop if Anthropic persistently overloaded
+    except APIStatusError as e:
+        print(f"Anthropic API error: {e}")
+        raise # Re-raise other API errors immediately
+
+# Test OpenAI with retry logic
+max_retries_openai = 5
+base_delay_openai = 1 # seconds
+openai_response = None
+
+for i in range(max_retries_openai):
+    try:
+        openai_response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Say hello!"}]
+        )
+        print("OpenAI says:", openai_response.choices[0].message.content)
+        break # If successful, break the loop
+    except (RateLimitError, APIError) as e:
+        if i < max_retries_openai - 1:
+            delay = base_delay_openai * (2 ** i) + random.uniform(0, 1) # Exponential backoff with jitter
+            print(f"OpenAI API error ({type(e).__name__}). Retrying in {delay:.2f} seconds...")
+            time.sleep(delay)
+        else:
+            print(f"Max retries reached. Still encountering OpenAI API error: {e}")
+            raise # Re-raise the exception if max retries are exceeded
+
+# Test Gemini with retry logic
+max_retries_gemini = 5
+base_delay_gemini = 1 # seconds
+gemini_response = None
+
+for i in range(max_retries_gemini):
+    try:
+        gemini_response = gemini_model.generate_content("Say hello!")
+        print("Gemini says:", gemini_response.text)
+        break # If successful, break the loop
+    except GoogleAPIError as e: # Changed genai.APIError to GoogleAPIError
+        if i < max_retries_gemini - 1:
+            delay = base_delay_gemini * (2 ** i) + random.uniform(0, 1) # Exponential backoff with jitter
+            print(f"Gemini API error ({type(e).__name__}). Retrying in {delay:.2f} seconds...")
+            time.sleep(delay)
+        else:
+            print(f"Max retries reached. Still encountering Gemini API error: {e}")
+            raise # Re-raise the exception if max retries are exceeded
+
+#-----------------------------
+  #SET UP ACI-BENCH DATASET
+#-----------------------------
+
+# Load the dataset directly from GitHub
+url = "https://raw.githubusercontent.com/microsoft/clinical_visit_note_summarization_corpus/refs/heads/main/data/aci-bench/challenge_data/train.csv"
+df = pd.read_csv(url)
+
+# View basic dataset information
+print(f"Total notes available: {len(df)}")
+print("Columns in dataset:", df.columns.tolist())
+print("Transcript source types:", df['dataset'].value_counts())
+
+# Use all available notes (67 notes) for a complete evaluation
+sample_df = df.copy()
+print(f"Successfully loaded {len(sample_df)} encounter records.")
+
+# Display the first transcript snippet
+print("\n--- SAMPLE TRANSCRIPT SNIPPET (Note #1) ---")
+print(sample_df['note'].iloc[0][:300] + "...")
