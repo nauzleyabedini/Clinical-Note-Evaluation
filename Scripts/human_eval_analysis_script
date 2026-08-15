@@ -1,0 +1,93 @@
+# ===========================================
+  # Merge quantitative human eval data with experimental eval results
+#============================================
+import pandas as pd
+
+# URL to your completed human evaluation file on GitHub
+human_eval_url = 'https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/human_evaluation.csv'
+
+try:
+    # Load the completed human evaluation
+    completed_human_df = pd.read_csv(human_eval_url)
+    print(f"✅ Successfully loaded human evaluation data ({len(completed_human_df)} rows).")
+    
+    # Ensure the experimental LLM dataset is loaded
+    if 'aggregated_exp_df' not in globals():
+        exp_eval_url = 'https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/aggregated_experimental_evaluation_results_v2_4_modules.csv'
+        aggregated_exp_df = pd.read_csv(exp_eval_url)
+        print("Loaded base experimental evaluation results.")
+
+    # Merge the human data with the LLM evaluation data
+    # pd.concat automatically aligns data according to the column headings
+    aggregated_df = pd.concat([aggregated_exp_df, completed_human_df], ignore_index=True)
+    print("✅ Successfully merged Human evaluation data with LLM evaluation data!")
+    
+    # Save to the requested new CSV file
+    output_filename = 'experimental_merge_v2.csv'
+    aggregated_df.to_csv(output_filename, index=False)
+    print(f"✅ Saved merged results to '{output_filename}'")
+    
+    # Preview the Human rows to confirm
+    print("\nPreview of Human Evaluation Rows:")
+    display(aggregated_df[aggregated_df['model'] == 'Human'].head())
+    
+except Exception as e:
+    print(f"⚠️ Error loading or merging data: {e}")
+    print("Please ensure 'human_evaluation.csv' is pushed to the 'Data' folder in your GitHub repo.")
+
+#===============================================
+  # Merge qualitative human and experimental AI eval results
+#===============================================
+import pandas as pd
+from IPython.display import display, HTML
+
+if 'aggregated_df' in globals() and 'Human' in aggregated_df['model'].values:
+    # Define the mapping between qualitative categories and their respective column names
+    # Format: (Display Name, AI_Column, Human_Column)
+    comparison_pairs = [
+        ("Hallucinations", "extracted_hallucinations", "critical_hallucination_notes"),
+        ("Omissions", "extracted_omissions", "critical_omission_notes"),
+        ("Contradictions", "extracted_contradictions", "contradiction_note"),
+        ("Misattributions / Reasoning", "extracted_misattributions", "clinical_reasoning_note"),
+        ("Clinical Validation", "unsubstantiated_diagnoses", "clinical_validation_note"),
+        ("Structure & Org", "structure_usability_score", "note_structure_note"),
+        ("Failing Triggers", "failing_triggers", "Fail_trigger")
+    ]
+
+    html_output = "<h2 style='text-align:center;'>Qualitative Analysis: Human vs. LLM Judges</h2><hr>"
+
+    # Iterate through all samples evaluated by humans
+    sample_ids = sorted(aggregated_df[aggregated_df['model'] == 'Human']['sample_id'].unique())
+
+    for sample_id in sample_ids:
+        sample_data = aggregated_df[aggregated_df['sample_id'] == sample_id]
+        
+        # Extract the rows for each judge
+        human_row = sample_data[sample_data['model'] == 'Human'].iloc[0] if 'Human' in sample_data['model'].values else None
+        openai_row = sample_data[sample_data['model'] == 'OpenAI'].iloc[0] if 'OpenAI' in sample_data['model'].values else None
+        anthropic_row = sample_data[sample_data['model'] == 'Anthropic'].iloc[0] if 'Anthropic' in sample_data['model'].values else None
+        
+        html_output += f"<h3 style='color:#2c3e50; margin-top:20px;'>Sample ID: {sample_id}</h3>"
+        html_output += "<table border='1' style='border-collapse:collapse; width:100%; text-align:left; font-size:13px;'>"
+        html_output += "<tr style='background-color:#f2f2f2;'><th style='width:15%; padding:8px;'>Category</th><th style='width:28%; padding:8px;'>🧑‍⚕️ Human Note</th><th style='width:28%; padding:8px;'>🤖 OpenAI Extraction</th><th style='width:28%; padding:8px;'>🧠 Anthropic Extraction</th></tr>"
+        
+        for cat_name, ai_col, human_col in comparison_pairs:
+            # Fetch values, defaulting to empty strings if the column is completely missing from the dataframe
+            h_val = human_row.get(human_col, "") if human_row is not None else ""
+            o_val = openai_row.get(ai_col, "") if openai_row is not None else ""
+            a_val = anthropic_row.get(ai_col, "") if anthropic_row is not None else ""
+            
+            # Clean up NaNs / empty values
+            h_val = "" if pd.isna(h_val) or h_val == "[]" or h_val == "" else str(h_val)
+            o_val = "" if pd.isna(o_val) or o_val == "[]" or o_val == "" else str(o_val)
+            a_val = "" if pd.isna(a_val) or a_val == "[]" or a_val == "" else str(a_val)
+            
+            # Only create a row if at least one judge had a note/extraction for this category
+            if h_val or o_val or a_val:
+                html_output += f"<tr><td style='padding:8px; font-weight:bold;'>{cat_name}</td><td style='padding:8px; white-space:pre-wrap;'>{h_val}</td><td style='padding:8px; white-space:pre-wrap;'>{o_val}</td><td style='padding:8px; white-space:pre-wrap;'>{a_val}</td></tr>"
+                
+        html_output += "</table>"
+
+    display(HTML(html_output))
+else:
+    print("⚠️ Ensure 'aggregated_df' is loaded and contains 'Human' evaluation data.")
