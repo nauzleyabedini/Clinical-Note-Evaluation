@@ -39,11 +39,9 @@ except Exception as e:
   # Merge qualitative human and experimental AI eval results
 #===============================================
 import pandas as pd
-from IPython.display import display, HTML
+from IPython.display import FileLink
 
 if 'aggregated_df' in globals() and 'Human' in aggregated_df['model'].values:
-    # Define the mapping between qualitative categories and their respective column names
-    # Format: (Display Name, AI_Column, Human_Column)
     comparison_pairs = [
         ("Hallucinations", "extracted_hallucinations", "critical_hallucination_notes"),
         ("Omissions", "extracted_omissions", "critical_omission_notes"),
@@ -54,40 +52,40 @@ if 'aggregated_df' in globals() and 'Human' in aggregated_df['model'].values:
         ("Failing Triggers", "failing_triggers", "Fail_trigger")
     ]
 
-    html_output = "<h2 style='text-align:center;'>Qualitative Analysis: Human vs. LLM Judges</h2><hr>"
-
-    # Iterate through all samples evaluated by humans
+    export_rows = []
     sample_ids = sorted(aggregated_df[aggregated_df['model'] == 'Human']['sample_id'].unique())
 
     for sample_id in sample_ids:
         sample_data = aggregated_df[aggregated_df['sample_id'] == sample_id]
-        
-        # Extract the rows for each judge
+
         human_row = sample_data[sample_data['model'] == 'Human'].iloc[0] if 'Human' in sample_data['model'].values else None
         openai_row = sample_data[sample_data['model'] == 'OpenAI'].iloc[0] if 'OpenAI' in sample_data['model'].values else None
         anthropic_row = sample_data[sample_data['model'] == 'Anthropic'].iloc[0] if 'Anthropic' in sample_data['model'].values else None
-        
-        html_output += f"<h3 style='color:#2c3e50; margin-top:20px;'>Sample ID: {sample_id}</h3>"
-        html_output += "<table border='1' style='border-collapse:collapse; width:100%; text-align:left; font-size:13px;'>"
-        html_output += "<tr style='background-color:#f2f2f2;'><th style='width:15%; padding:8px;'>Category</th><th style='width:28%; padding:8px;'>🧑‍⚕️ Human Note</th><th style='width:28%; padding:8px;'>🤖 OpenAI Extraction</th><th style='width:28%; padding:8px;'>🧠 Anthropic Extraction</th></tr>"
-        
+
         for cat_name, ai_col, human_col in comparison_pairs:
-            # Fetch values, defaulting to empty strings if the column is completely missing from the dataframe
             h_val = human_row.get(human_col, "") if human_row is not None else ""
             o_val = openai_row.get(ai_col, "") if openai_row is not None else ""
             a_val = anthropic_row.get(ai_col, "") if anthropic_row is not None else ""
-            
-            # Clean up NaNs / empty values
+
             h_val = "" if pd.isna(h_val) or h_val == "[]" or h_val == "" else str(h_val)
             o_val = "" if pd.isna(o_val) or o_val == "[]" or o_val == "" else str(o_val)
             a_val = "" if pd.isna(a_val) or a_val == "[]" or a_val == "" else str(a_val)
-            
-            # Only create a row if at least one judge had a note/extraction for this category
-            if h_val or o_val or a_val:
-                html_output += f"<tr><td style='padding:8px; font-weight:bold;'>{cat_name}</td><td style='padding:8px; white-space:pre-wrap;'>{h_val}</td><td style='padding:8px; white-space:pre-wrap;'>{o_val}</td><td style='padding:8px; white-space:pre-wrap;'>{a_val}</td></tr>"
-                
-        html_output += "</table>"
 
-    display(HTML(html_output))
+            if h_val or o_val or a_val:
+                export_rows.append({
+                    'Sample ID': sample_id,
+                    'Category': cat_name,
+                    'Human Note': h_val,
+                    'OpenAI Extraction': o_val,
+                    'Anthropic Extraction': a_val
+                })
+
+    qualitative_export_df = pd.DataFrame(export_rows)
+    export_filename = 'qualitative_comparison_summary.csv'
+    qualitative_export_df.to_csv(export_filename, index=False)
+    
+    print(f"\u2705 Successfully exported qualitative comparisons to '{export_filename}'")
+    display(FileLink(export_filename))
+    display(qualitative_export_df.head())
 else:
-    print("⚠️ Ensure 'aggregated_df' is loaded and contains 'Human' evaluation data.")
+    print("\u26a0\ufe0f Ensure 'aggregated_df' is loaded and contains 'Human' evaluation data.")
