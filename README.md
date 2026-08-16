@@ -2,7 +2,7 @@
 
 ## Executive Summary ##
 
-This project aims to build a comprehensive LLM-as-a-Judge pipeline for evaluating AI-generated clinical notes, comparing two frontier models (`OpenAI GPT-4o-mini` and `Anthropic Claude-3.5-Sonnet`) against human expert evaluations. 
+This project aims to build a comprehensive LLM-as-a-Judge pipeline for evaluating AI-generated clinical notes, comparing two frontier models (OpenAI `GPT-4o-mini` and Anthropic `Claude-3.5-Sonnet`) against human expert evaluations. 
 
 ## 🚀 Quick Start & Datasets
 All resources to replicate this study are in our [GitHub Repository](https://github.com/nauzleyabedini/Clinical-Note-Evaluation/).
