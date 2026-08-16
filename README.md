@@ -49,7 +49,7 @@ To assess baseline performance of the LLM judges, a **Human Expert** evaluated t
 ![Average Scores](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Results/human_vs_llm_averages.png) 
 ![Kappa Heatmap](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Results/human_agreement_heatmap.png)
 
-### 3. Summary of Key Failure Modes:**
+### 3. Summary of Key Failure Modes:
 **OpenAI (GPT-4o-mini):**
 * **Compliance Blind Spot:** Frequently misses unsubstantiated diagnoses. It assumes any condition listed in the AI draft has valid clinical justification even without explicit transcript evidence or documented Assessment & Plan (MEAT).
 * **False Negatives in Safety:** Its holistic leniency occasionally causes it to miss subtle but real clinical safety issues.
