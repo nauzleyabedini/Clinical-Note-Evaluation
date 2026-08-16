@@ -9,24 +9,23 @@ All resources to replicate this study are in our [GitHub Repository](https://git
 * **Note Data:** [ACI-BENCH Transcripts](https://raw.githubusercontent.com/microsoft/clinical_visit_note_summarization_corpus/refs/heads/main/data/aci-bench/challenge_data/train.csv) | [AI Notes Full (67)](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/full_dataset_with_ai_notes.csv) | [AI Notes Pilot (10)](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/experimental_dataset_with_ai_notes.csv)
 * **Evaluation Data:** [Human Benchmark (10)](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/human_evaluation.csv) | [Aggregated Pilot Results](https://raw.githubusercontent.com/nauzleyabedini/Clinical-Note-Evaluation/main/Data/aggregated_experimental_evaluation_results_v2_4_modules.csv)
 * **Code & Prompts:** [GitHub Prompts & Utils](https://github.com/nauzleyabedini/Clinical-Note-Evaluation/tree/main)
-* **Rubric & Scoring System:** [Note Audit Rubric v2](https://github.com/nauzleyabedini/Clinical-Note-Evaluation/blob/main/Rubrics/Note_Audit_Rubric_v2.md)
 
 ## Methods ##
 
 ### 1. Dataset and AI-generated note corpus
-I utilized the **ACI-BENCH dataset**, a corpus of ground-truth, simulated patient-clinician transcripts and corresponding, gold-standard clinical notes. 
+I utilized the **ACI-BENCH dataset**, which contains a corpus of ground-truth, simulated patient-clinician transcripts and corresponding, gold-standard clinical notes. **AI-generated draft notes** were synthesized for each encounter using a baseline generative model (`gemini-1.5-flash`) to serve as the evaluation targets.
 - **Full Dataset (N=67):** Used to establish baseline performance metrics and failure rates for the LLM judges.
 - **Experimental/Pilot Dataset (N=10):** A subset of encounters used for initial human-expert validation, prompt debugging, and pipeline alignment.
-AI-generated draft notes were synthesized for each encounter using a baseline generative model (e.g., Gemini) to serve as the evaluation targets.
 
 ### 2. LLM Evaluation Pipeline (LLM-as-a-Judge)
 I implemented an automated, 4-module evaluation pipeline to assess the quality of the AI-generated notes against the original transcripts and gold-standard notes. The evaluation was conducted using two frontier models: **OpenAI GPT-4o-mini** (optimizing for cost/efficiency) and **Anthropic Claude-3.5-Sonnet** (optimizing for rigor). 
-The four modules evaluated:
+
+**[Rubric & Scoring System:](https://github.com/nauzleyabedini/Clinical-Note-Evaluation/blob/main/Rubrics/Note_Audit_Rubric_v2.md)**
 1.  **Fact Grounding & Clinical Safety:** Detecting critical omissions and hallucinations.
 2.  **Clinical Reasoning:** Identifying contradictions and logical misattributions.
 3.  **Coding, Billing & Compliance:** Validating ICD-10 specificity, unsubstantiated diagnoses, and HCC/MEAT criteria.
 4.  **Structure & Usability:** Subjective scoring of note organization and overall pass/fail judgment.
- 
+  
 ### 3. Human Expert Baseline
 To assess baseline performance of the LLM judges, a **Human Expert** evaluated the experimental subset (N=10) using the same rubric. This established a baseline for clinical safety heuristics, compliance strictness, and qualitative formatting preferences to inform future LLM judge prompt fine-tuning.
 
@@ -67,7 +66,7 @@ To assess baseline performance of the LLM judges, a **Human Expert** evaluated t
 ## 🚀 Next Steps
 The primary objective of the next iteration is to bridge OpenAI's cost and basic safety heuristics with Anthropic's strict compliance - the core challenge in developing a scalable, reliable AI clinical note auditor.
 
-1. **Manual Prompt Tuning (N=10 Pilot) (*In Progress*):** Refine Anthropic's prompt to be less sensitive to harmless omissions and manually add strict HCC/MEAT validation rules to OpenAI's prompt. A small sample will be used to conserve token costs.
+1. **Manual Prompt Tuning (N=10 Pilot) (*In Progress*):** Refine Anthropic's prompt to be less sensitive to harmless omissions and manually add strict HCC/MEAT validation rules to OpenAI's prompt. Improve both model's ability to dismiss structural nuances that could be construed as stylistic preferences. A small sample will be used to conserve token costs.
 2. **Scale Human Evaluation (*In Progress*):** Expand the manual human grading to the full 67-note dataset to establish a statistically robust Gold Standard.
 3. **Automatic Prompt Optimization (APO) (*Future*):** Leverage an APO framework on the full dataset to aggressively optimize OpenAI (`gpt-4o-mini`). The objective is to refine the cheaper model achieve comparable safety and compliance profiles as the human judge, as indicated by improvement in Cohen's kappa. notably, APO will be introduced once a manually fine-tuned model is produced to focus on edge-case performance.
 
